@@ -1,9 +1,5 @@
 
-from genome import GenomePE
 from run_episode import run_episode
-
-
-NUM_AGENTS = 20
 
 
 def reproduce(survivors):
@@ -27,10 +23,9 @@ def reproduce(survivors):
     return new_genomes
 
 
-def evolve(generations=200):
+def evolve(genomes, generations=200):
 
     hall_of_fame = []
-    genomes = [GenomePE() for _ in range(NUM_AGENTS)]
 
     for g in range(generations):
 
