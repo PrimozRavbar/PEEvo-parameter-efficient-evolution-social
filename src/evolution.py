@@ -29,7 +29,15 @@ def evolve(genomes, generations=200):
 
     for g in range(generations):
 
-        fitness = run_episode(genomes)
+        episode_fitness = [
+            run_episode(genomes)
+            for _ in range(4)
+        ]
+
+        fitness = [
+            sum(episode[i] for episode in episode_fitness) / 4
+            for i in range(len(genomes))
+        ]
 
         ranking = sorted(
             range(len(genomes)),
