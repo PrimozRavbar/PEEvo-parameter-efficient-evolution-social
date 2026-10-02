@@ -29,7 +29,7 @@ class Agent:
     def get_input(self, env):
 
         # Sensor center in the agent's local coordinates
-        sensor_center = torch.tensor([-10.0, 0.0])
+        sensor_center = torch.tensor([10.0, 0.0])
 
         c = torch.cos(torch.tensor(self.theta))
         s = torch.sin(torch.tensor(self.theta))
