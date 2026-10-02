@@ -28,9 +28,11 @@ def reproduce(survivors):
 
 def evolve(genomes, generations=200):
 
+    initial_gen = 11
+
     hall_of_fame = []
 
-    for g in range(generations):
+    for g in range(initial_gen, generations):
 
         episode_fitness = [
             run_episode(genomes, steps=300)
@@ -38,7 +40,7 @@ def evolve(genomes, generations=200):
         ]
 
         fitness = [
-            sum(episode[i] for episode in episode_fitness) / 4
+            sum(episode[i] for episode in episode_fitness) / 6
             for i in range(len(genomes))
         ]
 
@@ -74,6 +76,12 @@ def evolve(genomes, generations=200):
 
             checkpoint = f"checkpoint/generation_{g + 1}.pt"
 
+            # Get any remote commits before creating the new checkpoint commit
+            subprocess.run(
+                ["git", "pull", "--rebase", "origin", "main"],
+                check=True
+            )
+
             torch.save(
                 {
                     "genomes": genomes,
@@ -97,7 +105,7 @@ def evolve(genomes, generations=200):
             )
 
             subprocess.run(
-                ["git", "push"],
+                ["git", "push", "origin", "main"],
                 check=True
             )
 
