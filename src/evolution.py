@@ -33,8 +33,8 @@ def evolve(genomes, generations=200):
     for g in range(generations):
 
         episode_fitness = [
-            run_episode(genomes)
-            for _ in range(4)
+            run_episode(genomes, steps=300)
+            for _ in range(6)
         ]
 
         fitness = [
@@ -70,7 +70,7 @@ def evolve(genomes, generations=200):
             f"avg={sum(fitness)/len(fitness):.2f}"
         )
 
-        if (g + 1) % 10 == 0:
+        if (g + 1) % 5 == 0:
 
             checkpoint = f"checkpoint/generation_{g + 1}.pt"
 
