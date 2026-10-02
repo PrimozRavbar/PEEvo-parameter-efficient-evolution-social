@@ -1,4 +1,7 @@
 
+import subprocess
+import torch
+
 from run_episode import run_episode
 
 
@@ -66,5 +69,38 @@ def evolve(genomes, generations=200):
             f"best={max(fitness):.2f}, "
             f"avg={sum(fitness)/len(fitness):.2f}"
         )
+
+        if (g + 1) % 10 == 0:
+
+            checkpoint = f"checkpoint/generation_{g + 1}.pt"
+
+            torch.save(
+                {
+                    "genomes": genomes,
+                    "hall_of_fame": hall_of_fame
+                },
+                checkpoint
+            )
+
+            subprocess.run(
+                ["git", "add", checkpoint],
+                check=True
+            )
+
+            subprocess.run(
+                [
+                    "git", "commit",
+                    "-m",
+                    f"Checkpoint generation {g + 1}"
+                ],
+                check=True
+            )
+
+            subprocess.run(
+                ["git", "push"],
+                check=True
+            )
+
+            print(f"Checkpoint pushed: generation {g + 1}")
 
     return genomes, hall_of_fame
