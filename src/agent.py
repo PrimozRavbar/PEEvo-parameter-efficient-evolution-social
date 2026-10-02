@@ -1,3 +1,4 @@
+
 import torch
 
 from brain import Brain
@@ -42,27 +43,39 @@ class Agent:
         sensor_center[0] += self.x
         sensor_center[1] += self.y
 
+        # 10x10 pixel coordinates relative to the sensor center
+        i, j = torch.meshgrid(
+            torch.arange(10, dtype=torch.float32),
+            torch.arange(10, dtype=torch.float32),
+            indexing="ij"
+        )
+
+        local = torch.stack(
+            (i - 4.5, j - 4.5),
+            dim=-1
+        )
+
+        # Rotate all sensor pixels into world coordinates
+        world = local @ R.T
+        world += sensor_center
+
+        x = torch.round(world[..., 0]).long()
+        y = torch.round(world[..., 1]).long()
+
+        # Valid pixels
+        valid = (
+            (x >= 0) &
+            (x < env.width) &
+            (y >= 0) &
+            (y < env.height)
+        )
+
         inputs = torch.zeros(10, 10, 3)
 
-        for i in range(10):
-            for j in range(10):
-
-                # Pixel coordinates relative to the sensor center
-                local = torch.tensor([
-                    i - 4.5,
-                    j - 4.5
-                ])
-
-                world = R @ local
-                world += sensor_center
-
-                x = int(round(world[0].item()))
-                y = int(round(world[1].item()))
-
-                if 0 <= x < env.width and 0 <= y < env.height:
-                    inputs[j, i] = env.field[y, x]
+        inputs[valid] = env.field[y[valid], x[valid]]
 
         return inputs.flatten()
+
 
     def get_polygon(self):
 
@@ -88,6 +101,7 @@ class Agent:
         corners[:, 1] += self.y
 
         return corners
+
 
     def step(self, env, dt):
 
