@@ -1,3 +1,4 @@
+
 import torch
 import imageio.v3 as iio
 
@@ -10,6 +11,7 @@ def run_episode(
     steps=500,
     render=False,
     movement="continuous",
+    brain_type="brain",
     record_data=False
 ):
 
@@ -21,7 +23,8 @@ def run_episode(
 
         agent = Agent(
             genome,
-            movement=movement
+            movement=movement,
+            brain_type=brain_type
         )
 
         agent.x = torch.randint(
