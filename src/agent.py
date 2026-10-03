@@ -1,12 +1,14 @@
+
 import numpy as np
 import torch
 
 from brain import Brain
+from brain2 import Brain2
 
 
 class Agent:
 
-    def __init__(self, genome, movement="continuous"):
+    def __init__(self, genome, movement="continuous", brain_type="brain"):
 
         self.x = 0.0
         self.y = 0.0
@@ -23,7 +25,19 @@ class Agent:
 
         self.movement = movement
 
-        self.brain = Brain(genome)
+        if brain_type == "brain":
+
+            self.brain = Brain(genome)
+
+        elif brain_type == "brain2":
+
+            self.brain = Brain2(genome)
+
+        else:
+
+            raise ValueError(
+                f"Unknown brain type: {brain_type}"
+            )
 
 
     def get_input(self, env):
