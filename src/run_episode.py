@@ -9,7 +9,8 @@ def run_episode(
     genomes,
     steps=500,
     render=False,
-    movement="continuous"
+    movement="continuous",
+    record_data=False
 ):
 
     env = Environment()
@@ -43,12 +44,45 @@ def run_episode(
 
     frames = []
 
+    if record_data:
+
+        recorded_data = []
+
+        for agent in agents:
+
+            recorded_data.append({
+                "sensory": [],
+                "hidden": [],
+                "output": [],
+                "Win": agent.brain.Win.detach().clone(),
+                "Wh": agent.brain.Wh.detach().clone(),
+                "Wout": agent.brain.Wout.detach().clone()
+            })
+
     for t in range(steps):
 
         env.update(agents)
 
-        for agent in agents:
-            agent.step(env, dt=1.0)
+        for i, agent in enumerate(agents):
+
+            agent.step(
+                env,
+                dt=1.0
+            )
+
+            if record_data:
+
+                recorded_data[i]["sensory"].append(
+                    agent.brain.last_sensory.clone()
+                )
+
+                recorded_data[i]["hidden"].append(
+                    agent.brain.last_hidden.clone()
+                )
+
+                recorded_data[i]["output"].append(
+                    agent.brain.last_output.clone()
+                )
 
         if render:
 
@@ -71,5 +105,23 @@ def run_episode(
         agent.energy
         for agent in agents
     ]
+
+    if record_data:
+
+        for data in recorded_data:
+
+            data["sensory"] = torch.stack(
+                data["sensory"]
+            )
+
+            data["hidden"] = torch.stack(
+                data["hidden"]
+            )
+
+            data["output"] = torch.stack(
+                data["output"]
+            )
+
+        return fitness, recorded_data
 
     return fitness

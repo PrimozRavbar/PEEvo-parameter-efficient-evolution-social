@@ -17,9 +17,13 @@ class Brain(nn.Module):
 
         self.leak = 0.6
         self.hidden_max = 10000
-        self.add_hidden =  0.5
-        self.add_sens =  0.01
+        self.add_hidden = 0.5
+        self.add_sens = 0.01
         self.output_gain = 100
+
+        self.last_sensory = None
+        self.last_hidden = None
+        self.last_output = None
 
     def forward(self, x):
 
@@ -27,10 +31,14 @@ class Brain(nn.Module):
         sensory = self.Win @ x
 
         # Clamp sensory drive
-        sensory = torch.clamp(sensory, 0, self.hidden_max)
+        sensory = torch.clamp(
+            sensory,
+            0,
+            self.hidden_max
+        )
 
         # Recurrent drive
-        recurrent = (self.Wh) @ self.h
+        recurrent = self.Wh @ self.h
 
         # Leak hidden state
         self.h = (1.0 - self.leak) * self.h
@@ -43,12 +51,24 @@ class Brain(nn.Module):
         )
 
         # Clamp hidden activity
-        self.h = torch.clamp(self.h, 0, self.hidden_max)
+        self.h = torch.clamp(
+            self.h,
+            0,
+            self.hidden_max
+        )
 
         # Output
         output = self.Wout @ self.h
 
         # Positive motor neurons
-        output = torch.clamp(output, min=0)*self.output_gain
+        output = torch.clamp(
+            output,
+            min=0
+        ) * self.output_gain
+
+        # Store activations from this forward pass
+        self.last_sensory = sensory.detach().clone()
+        self.last_hidden = self.h.detach().clone()
+        self.last_output = output.detach().clone()
 
         return output
