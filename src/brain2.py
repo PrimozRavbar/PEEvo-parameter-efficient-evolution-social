@@ -77,7 +77,7 @@ class Brain2(nn.Module):
         self.out_layer = self.Wout @ self.h
 
         # Hidden neuron 79 controls output noise
-        epsilon = self.h[79] * 100
+        epsilon = self.h[79] * 1
 
         epsilon = torch.clamp(
             epsilon,

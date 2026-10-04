@@ -1,3 +1,4 @@
+
 import torch
 
 
@@ -8,15 +9,21 @@ R_OUT = 2     # 10x128
 NUM_PARAMETERS_PE = (
     128 * R_IN + R_IN * 300 +       # Ain, Bin
     128 * R_H  + R_H * 128 +        # Ah, Bh
-    10 * R_OUT + R_OUT * 128       # Aout, Bout
+    10 * R_OUT + R_OUT * 128        # Aout, Bout
 )
+
+NUM_HYPERPARAMETERS = 20
+NUM_PARAMETERS = NUM_PARAMETERS_PE + NUM_HYPERPARAMETERS
 
 
 class GenomePE:
 
     def __init__(self):
 
-        self.chromosome = torch.randn(NUM_PARAMETERS_PE) * 0.1
+        self.chromosome = torch.cat([
+            torch.randn(NUM_PARAMETERS_PE) * 0.1,
+            torch.ones(NUM_HYPERPARAMETERS)
+        ])
 
     def clone(self):
 
@@ -35,15 +42,10 @@ class GenomePE:
             * mutation_scale
         )
 
-        self.chromosome = torch.clamp(
-            self.chromosome,
-            -1.0,
-            1.0
-        )
-
     def extract_weights(self):
 
-        chromosome = self.chromosome
+        pe_chromosome = self.chromosome[:NUM_PARAMETERS_PE]
+
         idx = 0
 
         n_Ain = 128 * R_IN
@@ -53,25 +55,32 @@ class GenomePE:
         n_Aout = 10 * R_OUT
         n_Bout = R_OUT * 128
 
-        Ain = chromosome[idx:idx+n_Ain].reshape(128, R_IN)
+        Ain = pe_chromosome[idx:idx+n_Ain].reshape(128, R_IN)
         idx += n_Ain
 
-        Bin = chromosome[idx:idx+n_Bin].reshape(R_IN, 300)
+        Bin = pe_chromosome[idx:idx+n_Bin].reshape(R_IN, 300)
         idx += n_Bin
 
-        Ah = chromosome[idx:idx+n_Ah].reshape(128, R_H)
+        Ah = pe_chromosome[idx:idx+n_Ah].reshape(128, R_H)
         idx += n_Ah
 
-        Bh = chromosome[idx:idx+n_Bh].reshape(R_H, 128)
+        Bh = pe_chromosome[idx:idx+n_Bh].reshape(R_H, 128)
         idx += n_Bh
 
-        Aout = chromosome[idx:idx+n_Aout].reshape(10, R_OUT)
+        Aout = pe_chromosome[idx:idx+n_Aout].reshape(10, R_OUT)
         idx += n_Aout
 
-        Bout = chromosome[idx:idx+n_Bout].reshape(R_OUT, 128)
+        Bout = pe_chromosome[idx:idx+n_Bout].reshape(R_OUT, 128)
 
         Win = Ain @ Bin
         Wh = Ah @ Bh
         Wout = Aout @ Bout
 
         return Win, Wh, Wout
+
+    def extract_hyperparameters(self):
+
+        return self.chromosome[
+            NUM_PARAMETERS_PE:
+            NUM_PARAMETERS_PE + NUM_HYPERPARAMETERS
+        ]
