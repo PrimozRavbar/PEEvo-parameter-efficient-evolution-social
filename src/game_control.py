@@ -128,6 +128,12 @@ class Game_control:
                     data["output"]
                 )
 
+            if render:
+                return fitness, recorded_data, frames
+
             return fitness, recorded_data
+
+        if render:
+            return fitness, frames
 
         return fitness

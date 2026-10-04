@@ -19,6 +19,17 @@ class Environment:
 
         self.add_gaussians()
 
+        # Blue 10-pixel border
+        blue = torch.tensor(
+            [0.0, 0.0, 1.0],
+            dtype=torch.float32
+        )
+
+        self.background[:10, :, :] = blue
+        self.background[-10:, :, :] = blue
+        self.background[:, :10, :] = blue
+        self.background[:, -10:, :] = blue
+
         # Current world state
         self.field = self.background.clone()
 
@@ -56,6 +67,7 @@ class Environment:
 
         for agent in agents:
             self.draw_agent(agent)
+
 
     def draw_aura(self, agent):
 
