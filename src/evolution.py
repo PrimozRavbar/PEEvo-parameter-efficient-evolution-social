@@ -7,7 +7,7 @@ from run_episode import run_episode
 
 def reproduce(survivors):
 
-    offspring_counts = [5, 5, 4, 3, 3]
+    offspring_counts = [6, 5, 4, 3, 1]
 
     new_genomes = []
 
