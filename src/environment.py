@@ -6,8 +6,8 @@ class Environment:
 
     def __init__(self):
 
-        self.width = 1000
-        self.height = 1000
+        self.width = 500
+        self.height = 500
 
         self.aura_sigma = 50.0
 
@@ -32,7 +32,7 @@ class Environment:
 
         # Normalize existing green food to total volume 1000
         green = self.background[:, :, 1]
-        green *= 100000.0 / green.sum()
+        green *= 25000.0 / green.sum()
 
         # Current world state
         self.field = self.background.clone()
@@ -91,7 +91,7 @@ class Environment:
             indexing="ij"
         )
 
-        gaussian = 0.5*torch.exp(
+        gaussian = 0.1*torch.exp(
             -((xx - agent.x) ** 2 + (yy - agent.y) ** 2) /
             (2 * self.aura_sigma ** 2)
         )
