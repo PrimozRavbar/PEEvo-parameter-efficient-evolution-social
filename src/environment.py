@@ -30,6 +30,10 @@ class Environment:
         self.background[:, :10, :] = blue
         self.background[:, -10:, :] = blue
 
+        # Normalize existing green food to total volume 1000
+        green = self.background[:, :, 1]
+        green *= 100000.0 / green.sum()
+
         # Current world state
         self.field = self.background.clone()
 
@@ -54,7 +58,6 @@ class Environment:
 
             self.background[:, :, 1] += gaussian
 
-        self.background[:, :, 1].clamp_(0.0, 1.0)
 
     def update(self, agents):
 
