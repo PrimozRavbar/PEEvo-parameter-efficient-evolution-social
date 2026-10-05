@@ -17,7 +17,7 @@ class Brain2(nn.Module):
         self.h = torch.zeros(hidden_size)
 
         # Hyperparameters
-        B_hyper_param = torch.ones(6)
+        B_hyper_param = genome.extract_hyperparameters()
 
         self.hidden_max = B_hyper_param[0] * 10000
         self.add_hidden = B_hyper_param[1] * 0.5
