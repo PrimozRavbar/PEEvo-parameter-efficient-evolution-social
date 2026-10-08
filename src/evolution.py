@@ -21,6 +21,9 @@ def reproduce(survivors):
             if i > 0:
                 child.mutate()
 
+                if child.full_rank:
+                    child.add_remove_connection()
+
             new_genomes.append(child)
 
     return new_genomes

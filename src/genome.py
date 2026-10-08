@@ -23,14 +23,28 @@ NUM_HYPERPARAMETERS = 20
 
 class GenomePE:
 
-    def __init__(self, full_rank=False):
+    def __init__(self, full_rank=False, initialization="random"):
 
         self.full_rank = full_rank
 
         if full_rank:
 
+            if initialization == "zeros":
+
+                weights = torch.zeros(NUM_PARAMETERS_FULL)
+
+            elif initialization == "random":
+
+                weights = torch.randn(NUM_PARAMETERS_FULL) * 0.1
+
+            else:
+
+                raise ValueError(
+                    "initialization must be 'zeros' or 'random'"
+                )
+
             self.chromosome = torch.cat([
-                torch.randn(NUM_PARAMETERS_FULL) * 0.1,
+                weights,
                 torch.ones(NUM_HYPERPARAMETERS)
             ])
 
@@ -64,13 +78,43 @@ class GenomePE:
 
     def mutate(self, mutation_rate=0.1, mutation_scale=0.05):
 
-        mask = torch.rand_like(self.chromosome) < mutation_rate
+        if self.full_rank:
 
-        self.chromosome += (
-            mask
-            * torch.randn_like(self.chromosome)
-            * mutation_scale
-        )
+            weights = self.chromosome[:NUM_PARAMETERS_FULL]
+
+            mask = (
+                (weights != 0)
+                & (torch.rand(NUM_PARAMETERS_FULL) < mutation_rate)
+            )
+
+            self.chromosome[:NUM_PARAMETERS_FULL] += (
+                mask
+                * torch.randn(NUM_PARAMETERS_FULL)
+                * mutation_scale
+            )
+
+            hyperparameters = self.chromosome[NUM_PARAMETERS_FULL:]
+
+            hyper_mask = (
+                torch.rand(NUM_HYPERPARAMETERS)
+                < mutation_rate
+            )
+
+            hyperparameters += (
+                hyper_mask
+                * torch.randn(NUM_HYPERPARAMETERS)
+                * mutation_scale
+            )
+
+        else:
+
+            mask = torch.rand_like(self.chromosome) < mutation_rate
+
+            self.chromosome += (
+                mask
+                * torch.randn_like(self.chromosome)
+                * mutation_scale
+            )
 
     def add_remove_connection(
         self,
