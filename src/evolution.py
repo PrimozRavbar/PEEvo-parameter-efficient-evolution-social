@@ -5,7 +5,11 @@ import torch
 from run_episode import run_episode
 
 
-def reproduce(survivors):
+def reproduce(
+    survivors,
+    connection_mutation_rate=0.001,
+    connection_mutation_scale=1.0
+):
 
     offspring_counts = [6, 5, 4, 3, 1]
 
@@ -22,7 +26,10 @@ def reproduce(survivors):
                 child.mutate()
 
                 if child.full_rank:
-                    child.add_remove_connection()
+                    child.add_remove_connection(
+                        mutation_rate=connection_mutation_rate,
+                        mutation_scale=connection_mutation_scale
+                    )
 
             new_genomes.append(child)
 
@@ -92,7 +99,11 @@ def evolve(genomes, generations=200):
             for i in ranking[:5]
         ]
 
-        genomes = reproduce(survivors)
+        genomes = reproduce(
+            survivors,
+            connection_mutation_rate=0.001,
+            connection_mutation_scale=1.0
+        )
 
         for i, (_, genome) in enumerate(hall_of_fame):
 
@@ -111,8 +122,6 @@ def evolve(genomes, generations=200):
                 f"checkpoint/generation_{g + 1}.pt"
             )
 
-            # Get any remote commits before creating
-            # the new checkpoint commit
             subprocess.run(
                 [
                     "git",
