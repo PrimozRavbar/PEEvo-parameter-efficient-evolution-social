@@ -7,11 +7,12 @@ from run_episode import run_episode
 
 def reproduce(
     survivors,
-    connection_mutation_rate=0.001,
-    connection_mutation_scale=1.0
+    offspring_counts,
+    mutation_rate,
+    mutation_scale,
+    connection_mutation_rate,
+    connection_mutation_scale
 ):
-
-    offspring_counts = [6, 5, 4, 3, 1]
 
     new_genomes = []
 
@@ -23,9 +24,14 @@ def reproduce(
 
             # Keep first offspring identical, mutate the rest
             if i > 0:
-                child.mutate()
+
+                child.mutate(
+                    mutation_rate=mutation_rate,
+                    mutation_scale=mutation_scale
+                )
 
                 if child.full_rank:
+
                     child.add_remove_connection(
                         mutation_rate=connection_mutation_rate,
                         mutation_scale=connection_mutation_scale
@@ -101,6 +107,9 @@ def evolve(genomes, generations=200):
 
         genomes = reproduce(
             survivors,
+            offspring_counts=[6, 5, 4, 3, 1],
+            mutation_rate=0.1,
+            mutation_scale=0.05,
             connection_mutation_rate=0.001,
             connection_mutation_scale=1.0
         )
