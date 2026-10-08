@@ -7,27 +7,57 @@ R_H   = 13    # 128x128
 R_OUT = 2     # 10x128
 
 NUM_PARAMETERS_PE = (
-    128 * R_IN + R_IN * 300 +       # Ain, Bin
-    128 * R_H  + R_H * 128 +        # Ah, Bh
-    10 * R_OUT + R_OUT * 128        # Aout, Bout
+    128 * R_IN + R_IN * 300 +
+    128 * R_H  + R_H * 128 +
+    10 * R_OUT + R_OUT * 128
+)
+
+NUM_PARAMETERS_FULL = (
+    128 * 300 +
+    128 * 128 +
+    10 * 128
 )
 
 NUM_HYPERPARAMETERS = 20
-NUM_PARAMETERS = NUM_PARAMETERS_PE + NUM_HYPERPARAMETERS
 
 
 class GenomePE:
 
-    def __init__(self):
+    def __init__(self, full_rank=False):
 
-        self.chromosome = torch.cat([
-            torch.randn(NUM_PARAMETERS_PE) * 0.1,
-            torch.ones(NUM_HYPERPARAMETERS)
-        ])
+        self.full_rank = full_rank
+
+        if full_rank:
+
+            self.chromosome = torch.cat([
+                torch.randn(NUM_PARAMETERS_FULL) * 0.1,
+                torch.ones(NUM_HYPERPARAMETERS)
+            ])
+
+        else:
+
+            Ain = torch.zeros(128, R_IN)
+            Bin = torch.randn(R_IN, 300) * 0.1
+
+            Ah = torch.zeros(128, R_H)
+            Bh = torch.randn(R_H, 128) * 0.1
+
+            Aout = torch.zeros(10, R_OUT)
+            Bout = torch.randn(R_OUT, 128) * 0.1
+
+            self.chromosome = torch.cat([
+                Ain.flatten(),
+                Bin.flatten(),
+                Ah.flatten(),
+                Bh.flatten(),
+                Aout.flatten(),
+                Bout.flatten(),
+                torch.ones(NUM_HYPERPARAMETERS)
+            ])
 
     def clone(self):
 
-        g = GenomePE()
+        g = GenomePE(full_rank=self.full_rank)
         g.chromosome = self.chromosome.clone()
 
         return g
@@ -42,7 +72,57 @@ class GenomePE:
             * mutation_scale
         )
 
+    def add_remove_connection(
+        self,
+        mutation_rate=0.1,
+        mutation_scale=0.05
+    ):
+
+        if not self.full_rank:
+            return
+
+        mask = torch.rand(NUM_PARAMETERS_FULL) < mutation_rate
+
+        for i in torch.where(mask)[0]:
+
+            if self.chromosome[i].item() == 0:
+
+                self.chromosome[i] = (
+                    torch.randn(1).item()
+                    * mutation_scale
+                )
+
+            else:
+
+                self.chromosome[i] = 0.0
+
     def extract_weights(self):
+
+        if self.full_rank:
+
+            idx = 0
+
+            n_Win = 128 * 300
+            n_Wh = 128 * 128
+            n_Wout = 10 * 128
+
+            Win = self.chromosome[
+                idx:idx+n_Win
+            ].reshape(128, 300)
+
+            idx += n_Win
+
+            Wh = self.chromosome[
+                idx:idx+n_Wh
+            ].reshape(128, 128)
+
+            idx += n_Wh
+
+            Wout = self.chromosome[
+                idx:idx+n_Wout
+            ].reshape(10, 128)
+
+            return Win, Wh, Wout
 
         pe_chromosome = self.chromosome[:NUM_PARAMETERS_PE]
 
@@ -55,22 +135,39 @@ class GenomePE:
         n_Aout = 10 * R_OUT
         n_Bout = R_OUT * 128
 
-        Ain = pe_chromosome[idx:idx+n_Ain].reshape(128, R_IN)
+        Ain = pe_chromosome[
+            idx:idx+n_Ain
+        ].reshape(128, R_IN)
+
         idx += n_Ain
 
-        Bin = pe_chromosome[idx:idx+n_Bin].reshape(R_IN, 300)
+        Bin = pe_chromosome[
+            idx:idx+n_Bin
+        ].reshape(R_IN, 300)
+
         idx += n_Bin
 
-        Ah = pe_chromosome[idx:idx+n_Ah].reshape(128, R_H)
+        Ah = pe_chromosome[
+            idx:idx+n_Ah
+        ].reshape(128, R_H)
+
         idx += n_Ah
 
-        Bh = pe_chromosome[idx:idx+n_Bh].reshape(R_H, 128)
+        Bh = pe_chromosome[
+            idx:idx+n_Bh
+        ].reshape(R_H, 128)
+
         idx += n_Bh
 
-        Aout = pe_chromosome[idx:idx+n_Aout].reshape(10, R_OUT)
+        Aout = pe_chromosome[
+            idx:idx+n_Aout
+        ].reshape(10, R_OUT)
+
         idx += n_Aout
 
-        Bout = pe_chromosome[idx:idx+n_Bout].reshape(R_OUT, 128)
+        Bout = pe_chromosome[
+            idx:idx+n_Bout
+        ].reshape(R_OUT, 128)
 
         Win = Ain @ Bin
         Wh = Ah @ Bh
@@ -80,7 +177,12 @@ class GenomePE:
 
     def extract_hyperparameters(self):
 
+        offset = (
+            NUM_PARAMETERS_FULL
+            if self.full_rank
+            else NUM_PARAMETERS_PE
+        )
+
         return self.chromosome[
-            NUM_PARAMETERS_PE:
-            NUM_PARAMETERS_PE + NUM_HYPERPARAMETERS
+            offset:offset + NUM_HYPERPARAMETERS
         ]
