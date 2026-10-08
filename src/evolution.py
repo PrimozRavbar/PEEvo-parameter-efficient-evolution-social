@@ -29,6 +29,28 @@ def reproduce(survivors):
     return new_genomes
 
 
+def serialize_genome(genome):
+
+    if genome.full_rank:
+
+        Win, Wh, Wout = genome.extract_weights()
+
+        return {
+            "full_rank": True,
+            "Win": Win.to_sparse_csr(),
+            "Wh": Wh.to_sparse_csr(),
+            "Wout": Wout.to_sparse_csr(),
+            "hyperparameters": (
+                genome.extract_hyperparameters().clone()
+            )
+        }
+
+    return {
+        "full_rank": False,
+        "genome": genome.clone()
+    }
+
+
 def evolve(genomes, generations=200):
 
     initial_gen = 11
@@ -58,14 +80,22 @@ def evolve(genomes, generations=200):
             for i in ranking[:2]
         ])
 
-        hall_of_fame.sort(key=lambda x: x[0], reverse=True)
+        hall_of_fame.sort(
+            key=lambda x: x[0],
+            reverse=True
+        )
+
         hall_of_fame = hall_of_fame[:20]
 
-        survivors = [genomes[i] for i in ranking[:5]]
+        survivors = [
+            genomes[i]
+            for i in ranking[:5]
+        ]
 
         genomes = reproduce(survivors)
 
         for i, (_, genome) in enumerate(hall_of_fame):
+
             if i < len(genomes):
                 genomes[i] = genome.clone()
 
@@ -77,18 +107,40 @@ def evolve(genomes, generations=200):
 
         if (g + 1) % 5 == 0:
 
-            checkpoint = f"checkpoint/generation_{g + 1}.pt"
+            checkpoint = (
+                f"checkpoint/generation_{g + 1}.pt"
+            )
 
-            # Get any remote commits before creating the new checkpoint commit
+            # Get any remote commits before creating
+            # the new checkpoint commit
             subprocess.run(
-                ["git", "pull", "--rebase", "origin", "main"],
+                [
+                    "git",
+                    "pull",
+                    "--rebase",
+                    "origin",
+                    "main"
+                ],
                 check=True
             )
 
+            serialized_genomes = [
+                serialize_genome(genome)
+                for genome in genomes
+            ]
+
+            serialized_hall_of_fame = [
+                (
+                    fit,
+                    serialize_genome(genome)
+                )
+                for fit, genome in hall_of_fame
+            ]
+
             torch.save(
                 {
-                    "genomes": genomes,
-                    "hall_of_fame": hall_of_fame
+                    "genomes": serialized_genomes,
+                    "hall_of_fame": serialized_hall_of_fame
                 },
                 checkpoint
             )
@@ -100,7 +152,8 @@ def evolve(genomes, generations=200):
 
             subprocess.run(
                 [
-                    "git", "commit",
+                    "git",
+                    "commit",
                     "-m",
                     f"Checkpoint generation {g + 1}"
                 ],
@@ -108,10 +161,17 @@ def evolve(genomes, generations=200):
             )
 
             subprocess.run(
-                ["git", "push", "origin", "main"],
+                [
+                    "git",
+                    "push",
+                    "origin",
+                    "main"
+                ],
                 check=True
             )
 
-            print(f"Checkpoint pushed: generation {g + 1}")
+            print(
+                f"Checkpoint pushed: generation {g + 1}"
+            )
 
     return genomes, hall_of_fame
