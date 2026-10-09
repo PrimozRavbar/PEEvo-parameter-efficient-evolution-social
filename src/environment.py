@@ -49,7 +49,7 @@ class Environment:
 
             cx = torch.randint(0, self.width, (1,)).item()
             cy = torch.randint(0, self.height, (1,)).item()
-            sigma = torch.empty(1).uniform_(50.0, 150.0).item()
+            sigma = torch.empty(1).uniform_(30.0, 30.0).item()
 
             gaussian = torch.exp(
                 -((x - cx) ** 2 + (y - cy) ** 2) /
