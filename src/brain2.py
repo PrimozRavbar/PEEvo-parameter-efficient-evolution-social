@@ -23,7 +23,7 @@ class Brain2(nn.Module):
         self.add_hidden = B_hyper_param[1] * 0.5
         self.add_sens = B_hyper_param[2] * 0.01
         self.leak_sens = B_hyper_param[3] * 0.1
-        self.leak_hidden = B_hyper_param[4] * 0.5
+        self.leak_hidden = B_hyper_param[4] * 0.1
         self.max_epsilon = B_hyper_param[5] * 1
 
         self.last_sensory = None
