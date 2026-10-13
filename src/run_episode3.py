@@ -3,12 +3,18 @@ import numpy as np
 import torch
 
 
-def run_episode(env, renderer=None, seed=42, max_steps=None):
-    observations, info = env.reset()
-    # To make the episode reproducible, use:
-    # observations, info = env.reset(seed=seed)
+def run_episode(env, renderer=None, seed=None, max_steps=None):
+    if seed is None:
+        observations, info = env.reset()
+    else:
+        observations, info = env.reset(seed=seed)
 
     limit = env.max_steps if max_steps is None else int(max_steps)
+
+    initial_energy = np.array(
+        [agent.energy for agent in env.agents],
+        dtype=np.float64,
+    )
 
     if renderer is not None:
         renderer.frames.clear()
@@ -46,11 +52,17 @@ def run_episode(env, renderer=None, seed=42, max_steps=None):
 
     elapsed = time.perf_counter() - start
 
+    energy = np.array(
+        [agent.energy for agent in env.agents],
+        dtype=np.float64,
+    )
+
+    food_collected = energy - initial_energy
+
     return {
         "steps": env.step_count,
-        "energy": np.array(
-            [agent.energy for agent in env.agents]
-        ),
+        "energy": energy,
+        "food_collected": food_collected,
         "food_remaining": int(env.food_alive.sum()),
         "seconds": elapsed,
     }

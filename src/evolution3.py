@@ -2,28 +2,9 @@ import torch
 
 
 def offspring_count(fitness):
-    if fitness < 700:
+    if fitness < 0.5:
         return 0
-    elif fitness < 1000:
-        return 1
-    elif fitness < 1300:
-        return 2
-    elif fitness < 1500:
-        return 3
-    elif fitness < 1700:
-        return 5
-    elif fitness < 1900:
-        return 6
-    elif fitness < 2000:
-        return 8
-    elif fitness < 2200:
-        return 9
-    elif fitness <= 3000:
-        return 10
-    else:
-        return 15
-
-
+    return max(1, int(fitness / 5))
 def reproduce(
     survivors,
     survivor_fitness,
