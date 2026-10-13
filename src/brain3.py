@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class Brain2(nn.Module):
+class Brain3(nn.Module):
     def __init__(
         self, genome, input_size=16, hidden_size=128, output_size=3
     ):
