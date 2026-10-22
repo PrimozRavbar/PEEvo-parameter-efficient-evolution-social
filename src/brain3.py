@@ -49,7 +49,8 @@ class Brain3(nn.Module):
 
         noise = torch.randn_like(self.out_layer) * self.out_layer * epsilon
         output = self.out_layer + noise
-        output = torch.clamp(output, min=0)
+        #output = torch.clamp(output, min=0)
+        output = torch.tanh(output)
 
         self.last_sensory = sensory.detach().clone()
         self.last_hidden = self.h.detach().clone()
